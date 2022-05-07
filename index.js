@@ -1,7 +1,8 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config();
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -19,6 +20,7 @@ async function run() {
         await client.connect();
         console.log("DB Connected");
         const itemCollection = client.db("allitem").collection("inventory-item");
+        const purchaseCollection = client.db("allitem").collection("incoming-purchase");
 
         app.get('/item', async (req, res) => {
             const query = {};
@@ -47,6 +49,29 @@ async function run() {
             const result = await itemCollection.updateOne(filter, update);
             res.send(result);
             console.log(result);
+        });
+
+
+        //incoming purchases
+        app.get('/purchase', async (req, res) => {
+            const query = {};
+            const cursor = purchaseCollection.find(query);
+            const purchases = await cursor.toArray();
+            res.send(purchases);
+        });
+
+        app.post('/item', async (req, res) => {
+            const item = req.body;
+            const items = await itemCollection.insertOne(item);
+            res.send(items);
+        });
+
+        app.delete('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await purchaseCollection.deleteOne(query);
+            res.send(result);
+
         });
 
     }
