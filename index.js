@@ -21,6 +21,7 @@ async function run() {
         console.log("DB Connected");
         const itemCollection = client.db("allitem").collection("inventory-item");
         const purchaseCollection = client.db("allitem").collection("incoming-purchase");
+        const orderCollection = client.db("allitem").collection("outgoing-order");
 
         app.get('/item', async (req, res) => {
             const query = {};
@@ -73,6 +74,41 @@ async function run() {
             res.send(result);
 
         });
+
+        //outgoing orders
+        app.get('/order', async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
+
+        app.put('/item/:id', async (req, res) => {
+            console.log(req.body)
+            const { qty, itemName } = req.body;
+            // console.log(qty, itemName);
+
+            const filter = { name: itemName };
+            const update = {
+                $set: {
+                    quantity: qty
+
+                }
+            }
+            const result = await orderCollection.updateOne(filter, update);
+            res.send(result);
+        });
+
+
+
+        app.delete('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.send(result);
+
+        });
+
 
     }
     finally {
