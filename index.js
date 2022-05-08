@@ -17,6 +17,14 @@ function verifyJWT(req, res, next) {
     if (!authHeader) {
         return res.status(401).send({ message: 'unauthorized Access' })
     }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' })
+        }
+        console.log(decoded);
+        req.decoded = decoded;
+    })
     console.log(authHeader);
     next();
 
@@ -105,12 +113,17 @@ async function run() {
             res.send(orders);
         });
 
-        app.get('/items', verifyJWT, async (req, res) => {
+        app.get('/myitem', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             const email = req.query.email;
-            const query = { email: email }
-            const cursor = itemCollection.find(query)
-            const myItems = await cursor.toArray();
-            res.send(myItems);
+            if (email == decodedEmail) {
+                const query = { email: email }
+                const cursor = itemCollection.find(query)
+                const myItems = await cursor.toArray();
+                res.send(myItems);
+            } else {
+                res.status(403).send({ message: 'Forbidden Access' })
+            }
         })
 
 
