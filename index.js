@@ -124,7 +124,15 @@ async function run() {
             } else {
                 res.status(403).send({ message: 'Forbidden Access' })
             }
-        })
+        });
+
+        app.delete('/item/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await itemCollection.deleteOne(query);
+            res.send(result);
+
+        });
 
 
     }
